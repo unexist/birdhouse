@@ -20,6 +20,7 @@ Nothing special, model can be printed on the back in one go.
 
 ![Prototype 1](pictures/prototype1.jpg?raw=true "Prototype 1")
 ![Prototype 2](pictures/prototype2.jpg?raw=true "Prototype 2")
+![Prototype 3](pictures/prototype3.jpg?raw=true "Prototype 3")
 
 # Model
 
