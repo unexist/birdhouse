@@ -1,6 +1,8 @@
 # Birdhouse
 
-This is fun project to create small birdhouse, attached with motion sensor and cam.
+This is fun project to create small birdhouse, attached with motion sensor and
+cam. When there is motion detected, the cam shoots a picture and it is going to
+be transmitted via telegram.
 
 # Parts list
 
@@ -8,7 +10,11 @@ This is fun project to create small birdhouse, attached with motion sensor and c
 - 1x HC SR501 Pir motion sensor
 - 1x Pi cam
 - 1x Cam cable for Pi Zero
-- A bit of wiring..
+- A bit of wiring, tin and filament
+
+# Print settings
+
+Nothing special, model can be printed on the back in one go.
 
 # Prototype
 
@@ -18,3 +24,7 @@ This is fun project to create small birdhouse, attached with motion sensor and c
 # Model
 
 ![Model](pictures/3dmodel.png?raw=true "Model")
+
+# Cam
+
+![Cam](pictures/cam1.jpg?raw=true "Cam")
