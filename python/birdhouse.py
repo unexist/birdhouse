@@ -69,7 +69,7 @@ def help_command(update: Update, _: CallbackContext) -> None:
 
 if __name__ == "__main__":
     # Sanity check
-    if not "TOKEN" in os.environ:
+    if os.environ.get("TOKEN") is None:
         print("Env var TOKEN is required!")
         exit()
 
