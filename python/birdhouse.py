@@ -1,30 +1,32 @@
 #!/usr/bin/python3 
 
-import RPi.GPIO as GPIO
-from picamera import PiCamera
 from time import sleep
 import os
+import copy
 import logging
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, PicklePersistence
+import RPi.GPIO as GPIO
+from picamera import PiCamera
 
 # Globals
 SENSOR_PIN = 23
-SUBSCRIPTIONS = {}
 CAMERA = None
+BOT = None
+UDATA = {}
 
 def motion_callback(channel):
-    if 0 < len(SUBSCRIPTIONS):
+    if 0 < len(UDATA):
         print("Taking photo")
         CAMERA.start_preview()
         sleep(1)
         CAMERA.capture(os.getcwd() + "/image.jpg")
         CAMERA.stop_preview()
 
-        for userid, bot in SUBSCRIPTIONS.items():
-            print("Send message to %s" % userid)
-            bot.send_message(chat_id=userid, text="Chirp! Churp!!")
-            bot.send_photo(chat_id=userid, photo=open(os.getcwd() + "/image.jpg", "rb"))
+        for userid, username in UDATA.items():
+            print("Send message to %s" % username)
+            BOT.send_message(chat_id=userid, text="Chirp! Chirp!")
+            BOT.send_photo(chat_id=userid, photo=open(os.getcwd() + "/image.jpg", "rb"))
      
 # Enable logging
 logging.basicConfig(
@@ -35,16 +37,20 @@ logger = logging.getLogger(__name__)
 
 # Commands
 def start_command(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("Hi, thanks for the subscription!")
+    update.message.reply_text("Hi %s, thanks for the subscription!" % update.message.from_user.username)
 
-    SUBSCRIPTIONS[update.message.from_user.id] = context.bot
+    # Store user
+    context.user_data[update.message.from_user.id] = update.message.from_user.username
+    UDATA[update.message.from_user.id] = update.message.from_user.username
 
     print("%s subscribed to updates" % update.message.from_user.username)
 
-def stop_command(update: Update, _: CallbackContext) -> None:
-    update.message.reply_text("Bye bye!")
+def stop_command(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Bye bye %!" % update.message.from_user.username)
 
-    del SUBSCRIPTIONS[update.message.from_user.id]
+    # Delete user
+    del context.user_data[update.message.from_user.id]
+    del UDATA[update.message.from_user.id]
 
     print("%s unsubscribed from updates" % update.message.from_user.username)
 
@@ -64,7 +70,7 @@ def help_command(update: Update, _: CallbackContext) -> None:
         "Available commands:"
         "/start - Subcribe to updates"
         "/stop  - Unsubscribe from updates"
-        "/pic   - Take a pictube and"
+        "/pic   - Take a picture"
     )
 
 if __name__ == "__main__":
@@ -81,20 +87,30 @@ if __name__ == "__main__":
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(SENSOR_PIN, GPIO.IN)
 
-    # Set up stuff
     GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=motion_callback)
 
-    updater = Updater(os.environ.get("TOKEN"))
+    # Set up telegram / persistence
+    pickle_data = PicklePersistence(filename="birdhouse.dat")
 
-    dispatcher = updater.dispatcher
+    updater = Updater(os.environ.get("TOKEN"), persistence=pickle_data, use_context=True)
 
     # Add dispatcher commands
+    dispatcher = updater.dispatcher
+
     dispatcher.add_handler(CommandHandler("start", start_command))
     dispatcher.add_handler(CommandHandler("stop", stop_command))
     dispatcher.add_handler(CommandHandler("pic", pic_command))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
     updater.start_polling()
+
+    # FIXME: STUPID!
+    BOT = copy.copy(updater.bot)
+    UDATA = copy.copy(dispatcher.user_data)
+
+    # Say all known users hello
+    for userid, username in dispatcher.user_data.items():
+        BOT.send_message(chat_id=userid, text="Ready for duty!")
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     updater.idle()
