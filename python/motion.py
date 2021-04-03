@@ -1,6 +1,17 @@
 #!/usr/bin/python3 
+
+##
+# @package birdhouse
+#
+# @file Motion test
+# @copyright 2021 Christoph Kappel <christoph@unexist.dev>
+# @version $Id$
+#
+# This program can be distributed under the terms of the GNU GPLv2.
+# See the file LICENSE for details.
+##
+
 import RPi.GPIO as GPIO
-#from picamera import PiCamera
 from time import sleep
  
 SENSOR_PIN = 23
@@ -8,15 +19,8 @@ SENSOR_PIN = 23
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(SENSOR_PIN, GPIO.IN)
 
-#camera = PiCamera()
- 
 def motion_callback(channel):
-    #camera.start_preview()
-    #sleep(5)
-    #camera.capture('/home/pi/image.jpg')
-    #camera.stop_preview()    
-
-    print('Es gab eine Bewegung!')
+    print('Motion!')
  
 try:
     GPIO.add_event_detect(SENSOR_PIN , GPIO.RISING, callback=motion_callback)
