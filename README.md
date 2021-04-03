@@ -10,7 +10,7 @@ be transmitted via telegram.
 - 1x HC SR501 Pir motion sensor
 - 1x Pi cam
 - 1x Cam cable for Pi Zero
-- A bit of wiring, tin and filament
+- A bit of wiring, tin, psu  and filament
 
 # Print settings
 
@@ -29,3 +29,9 @@ Nothing special, model can be printed on the back in one go.
 # Cam
 
 ![Cam](pictures/cam1.jpg?raw=true "Cam")
+![Cam](pictures/cam2.jpg?raw=true "Cam")
+![Cam](pictures/cam3.jpg?raw=true "Cam")
+![Cam](pictures/cam4.jpg?raw=true "Cam")
+
+
+![Cam](pictures/clip.mp4?raw=true "Cam")
