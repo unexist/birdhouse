@@ -1,8 +1,20 @@
 # Birdhouse
 
 This is fun project to create small birdhouse, attached with motion sensor and
-cam. When there is motion detected, the cam shoots a picture and it is going to
-be transmitted via telegram.
+cam. When there is motion detected, the cam shoots a picture and transmits it
+via telegram.
+
+When there is continuous movement, pictures are taken every few seconds (depends on
+the hardware) until there is no further movement within 10s. After that, the
+images are converted via imagemagick to an animated gif and transmitted once to
+every subscriber.
+
+Following chat commands are available:
+
+/sub   - Subcribe to updates
+/unsub - Unsubscribe from updates
+/pic   - Take a picture
+/die   - Shutdown
 
 # Parts list
 
@@ -33,5 +45,8 @@ Nothing special, model can be printed on the back in one go.
 ![Cam](pictures/cam3.jpg?raw=true "Cam")
 ![Cam](pictures/cam4.jpg?raw=true "Cam")
 
+# Clip
+
+And a low-res clip for github:
 
 ![Clip](pictures/clip.gif?raw=true "Clip")
