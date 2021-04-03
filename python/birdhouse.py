@@ -118,9 +118,13 @@ def pic_command(update: Update, context: CallbackContext) -> None:
 
 def die_command(update: Update, context: CallbackContext) -> None:
     # Send to subscribers
+    LOGGER.info("Update subscriber - start")
     for userid, username in context.user_data.items():
         LOGGER.info("Send message to %s" % username)
         context.bot.send_message(chat_id=userid, text="Going back to slumber! zZzZ")
+    LOGGER.info("Update subscriber - stop")
+
+    os.system("convert -delay 20 -loop 0 image-*.jpg anim.gif")
 
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text(
@@ -145,7 +149,7 @@ if __name__ == "__main__":
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(SENSOR_PIN, GPIO.IN)
 
-    GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=motion_callback)
+    GPIO.add_event_detect(SENSOR_PIN, GPIO.RISING, callback=motion_callback, bouncetime=500)
 
     # Set up telegram / persistence
     pickle_data = PicklePersistence(filename="birdhouse.dat")
@@ -164,9 +168,11 @@ if __name__ == "__main__":
     updater.start_polling()
 
     # Say hello to all known users
-    LOGGER.info("Ready")
+    LOGGER.info("Update subscriber - stop")
     for userid, username in DISPATCHER.user_data.items():
         DISPATCHER.bot.send_message(chat_id=userid, text="Ready for duty!")
+    LOGGER.info("Update subscriber - stop")
+    LOGGER.info("Ready")
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     updater.idle()
