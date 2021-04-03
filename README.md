@@ -34,4 +34,4 @@ Nothing special, model can be printed on the back in one go.
 ![Cam](pictures/cam4.jpg?raw=true "Cam")
 
 
-![Cam](pictures/clip.mp4?raw=true "Cam")
+![Clip](pictures/clip.gif?raw=true "Clip")
