@@ -37,6 +37,9 @@ LOGGER = logging.getLogger(__name__)
 def alarm_callback(context: CallbackContext) -> None:
     LOGGER.info("Alarm called")
 
+    # Ignore future motion callbacks to avoid stacking
+    DISPATCHER.bot_data["ignore_callbacks"] = True
+
     # Collect images
     imgList = glob(os.getcwd() + "/image-*.jpg")
 
@@ -45,10 +48,11 @@ def alarm_callback(context: CallbackContext) -> None:
     # Convert if more than one
     if 1 < len(imgList):
         LOGGER.info("Convert images - start")
-        os.system("convert -delay 20 -loop 0 image-*.jpg anim.gif")
+        os.system("convert -delay 15 -loop 0 image-*.jpg anim.gif")
         LOGGER.info("Convert images - stop")
 
     # Send to subscribers
+    LOGGER.info("Send file - start")
     for userid, username in DISPATCHER.user_data.items():
         LOGGER.info("Send message to %s", username)
         DISPATCHER.bot.send_message(chat_id=userid, text="Chirp! Chirp!")
@@ -59,6 +63,7 @@ def alarm_callback(context: CallbackContext) -> None:
         else:
             for img in imgList:
                 DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"))
+    LOGGER.info("Send file - stop")
 
     # Tidy up
     LOGGER.info("Tidy up - start")
@@ -70,22 +75,26 @@ def alarm_callback(context: CallbackContext) -> None:
             os.remove(img)
     LOGGER.info("Tidy up - stop")
 
+    # Lift ignore
+    DISPATCHER.bot_data["ignore_callbacks"] = False
+
 def motion_callback(channel):
-    # Take photo for current timestamp
-    LOGGER.info("Take photo - start")
-    CAMERA.start_preview()
-    sleep(1)
-    CAMERA.capture(os.getcwd() + "/image-{:d}.jpg".format(int(time())))
-    CAMERA.stop_preview()
-    LOGGER.info("Take photo - stop")
+    if True != DISPATCHER.bot_data["ignore_callbacks"]:
+        # Take photo for current timestamp
+        LOGGER.info("Take photo - start")
+        CAMERA.start_preview()
+        sleep(1)
+        CAMERA.capture(os.getcwd() + "/image-{:d}.jpg".format(int(time())))
+        CAMERA.stop_preview()
+        LOGGER.info("Take photo - stop")
 
-    # Schedule job
-    LOGGER.info("Reschedule jobs - start")
-    for job in DISPATCHER.job_queue.get_jobs_by_name("motion"):
-        job.schedule_removal()
+        # Schedule job
+        LOGGER.info("Reschedule jobs - start")
+        for job in DISPATCHER.job_queue.get_jobs_by_name("motion"):
+            job.schedule_removal()
 
-    DISPATCHER.job_queue.run_once(alarm_callback, when=10, name="motion")
-    LOGGER.info("Reschedule jobs - stop")
+        DISPATCHER.job_queue.run_once(alarm_callback, when=10, name="motion")
+        LOGGER.info("Reschedule jobs - stop")
 
 # Commands
 def sub_command(update: Update, context: CallbackContext) -> None:
@@ -164,6 +173,8 @@ if __name__ == "__main__":
     DISPATCHER.add_handler(CommandHandler("pic", pic_command))
     DISPATCHER.add_handler(CommandHandler("die", die_command))
     DISPATCHER.add_handler(CommandHandler("help", help_command))
+
+    DISPATCHER.bot_data["ignore_callbacks"] = False
 
     updater.start_polling()
 
