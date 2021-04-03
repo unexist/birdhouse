@@ -133,7 +133,7 @@ def die_command(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=userid, text="Going back to slumber! zZzZ")
     LOGGER.info("Update subscriber - stop")
 
-    os.system("convert -delay 20 -loop 0 image-*.jpg anim.gif")
+    os.system("sudo shutdown -h now")
 
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text(
