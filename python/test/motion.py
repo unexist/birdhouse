@@ -20,7 +20,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(SENSOR_PIN, GPIO.IN)
 
 def motion_callback(channel):
-    print('Motion!')
+    print("Motion!")
  
 try:
     GPIO.add_event_detect(SENSOR_PIN , GPIO.RISING, callback=motion_callback)

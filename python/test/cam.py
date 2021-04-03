@@ -13,10 +13,11 @@
 
 from picamera import PiCamera
 from time import sleep
+import os
 
 # Globals
 camera = PiCamera()
 camera.start_preview()
 sleep(1)
-camera.capture('/home/pi/image.jpg')
+camera.capture(os.getcwd() + "/image.jpg")
 camera.stop_preview()
