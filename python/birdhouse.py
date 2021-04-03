@@ -12,8 +12,7 @@
 ##
 
 from time import sleep, time
-from copy import copy
-from glop import glob
+from glob import glob
 import os
 import logging
 
@@ -26,7 +25,7 @@ from picamera import PiCamera
 # Globals
 SENSOR_PIN = 23
 CAMERA = None
-BOT = None
+DISPATCHER = None
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -35,43 +34,58 @@ logging.basicConfig(
 LOGGER = logging.getLogger(__name__)
 
 # Event handler
-def alarm(context: CallbackContext) -> None:
-    LOGGER.info("Alarm called - scanning files")
+def alarm_callback(context: CallbackContext) -> None:
+    LOGGER.info("Alarm called")
 
+    # Collect images
     imgList = glob(os.getcwd() + "/image-*.jpg")
 
+    LOGGER.info("Found %d images", len(imgList))
+
+    # Convert if more than one
     if 1 < len(imgList):
-        LOGGER.info("Converting {:d} images..", len(imgList))
-        system("convert -delay 5 -loop 0 image-*.jpg anim.gif")
+        LOGGER.info("Convert images - start")
+        os.system("convert -delay 20 -loop 0 image-*.jpg anim.gif")
+        LOGGER.info("Convert images - stop")
 
     # Send to subscribers
-    for userid, username in context.bot.user_data.items():
+    for userid, username in DISPATCHER.user_data.items():
         LOGGER.info("Send message to %s", username)
-        BOT.send_message(chat_id=userid, text="Chirp! Chirp!")
+        DISPATCHER.bot.send_message(chat_id=userid, text="Chirp! Chirp!")
 
         # Select file
-        if os.path.isFile("anim.gif"):
-            BOT.send_animation(chat_id=userid, animation=open("anim.gif", "rb"))
-            os.remove("anim.gif")
+        if os.path.isfile("anim.gif"):
+            DISPATCHER.bot.send_animation(chat_id=userid, animation=open("anim.gif", "rb"))
         else:
             for img in imgList:
-                BOT.send_photo(chat_id=userid, photo=open(img, "rb"))
-                os.remove(img)
+                DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"))
+
+    # Tidy up
+    LOGGER.info("Tidy up - start")
+    if os.path.isfile("anim.gif"):
+        os.remove("anim.gif")
+
+    for img in imgList:
+        if os.path.isfile(img):
+            os.remove(img)
+    LOGGER.info("Tidy up - stop")
 
 def motion_callback(channel):
     # Take photo for current timestamp
-    LOGGER.info("Taking photo")
+    LOGGER.info("Take photo - start")
     CAMERA.start_preview()
     sleep(1)
-    CAMERA.capture(getcwd() + "/image-{:d}.jpg".format(int(time())))
+    CAMERA.capture(os.getcwd() + "/image-{:d}.jpg".format(int(time())))
     CAMERA.stop_preview()
+    LOGGER.info("Take photo - stop")
 
     # Schedule job
-    for job in BOT.job_queue.get_jobs_by_name("motion"):
-        LOGGER.info("Rescheduling alarm..")
+    LOGGER.info("Reschedule jobs - start")
+    for job in DISPATCHER.job_queue.get_jobs_by_name("motion"):
         job.schedule_removal()
 
-    BOT.job_queue.run_once(alarm, 3, context=None, name="motion")
+    DISPATCHER.job_queue.run_once(alarm_callback, when=10, name="motion")
+    LOGGER.info("Reschedule jobs - stop")
 
 # Commands
 def sub_command(update: Update, context: CallbackContext) -> None:
@@ -93,11 +107,12 @@ def unsub_command(update: Update, context: CallbackContext) -> None:
 def pic_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Say cheese!")
 
-    LOGGER.info("Taking photo")
+    LOGGER.info("Take photo - start")
     CAMERA.start_preview()
     sleep(1)
     CAMERA.capture(os.getcwd() + "/pic.jpg")
     CAMERA.stop_preview()
+    LOGGER.info("Take photo - stop")
 
     context.bot.send_photo(chat_id=update.message.from_user.id, photo=open(os.getcwd() + "/pic.jpg", "rb"))
 
@@ -138,22 +153,20 @@ if __name__ == "__main__":
     updater = Updater(os.environ.get("TOKEN"), persistence=pickle_data, use_context=True)
 
     # Add dispatcher commands
-    dispatcher = updater.dispatcher
+    DISPATCHER = updater.dispatcher
 
-    dispatcher.add_handler(CommandHandler("sub", sub_command))
-    dispatcher.add_handler(CommandHandler("unsub", unsub_command))
-    dispatcher.add_handler(CommandHandler("pic", pic_command))
-    dispatcher.add_handler(CommandHandler("die", die_command))
-    dispatcher.add_handler(CommandHandler("help", help_command))
+    DISPATCHER.add_handler(CommandHandler("sub", sub_command))
+    DISPATCHER.add_handler(CommandHandler("unsub", unsub_command))
+    DISPATCHER.add_handler(CommandHandler("pic", pic_command))
+    DISPATCHER.add_handler(CommandHandler("die", die_command))
+    DISPATCHER.add_handler(CommandHandler("help", help_command))
 
     updater.start_polling()
 
-    # FIXME: STUPID!
-    BOT = copy(updater.bot)
-
-    # Say all known users hello
-    for userid, username in dispatcher.user_data.items():
-        BOT.send_message(chat_id=userid, text="Ready for duty!")
+    # Say hello to all known users
+    LOGGER.info("Ready")
+    for userid, username in DISPATCHER.user_data.items():
+        DISPATCHER.bot.send_message(chat_id=userid, text="Ready for duty!")
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     updater.idle()
