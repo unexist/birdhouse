@@ -78,6 +78,18 @@ def alarm_callback(context: CallbackContext) -> None:
     # Lift ignore
     DISPATCHER.bot_data["ignore_callbacks"] = False
 
+def error_callback(update: object, context: CallbackContext) -> None:
+    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    LOGGER.info("Update subscriber - start")
+    for userid, username in context.user_data.items():
+        LOGGER.info("Send message to %s" % username)
+        context.bot.send_message(chat_id=userid, text="Error occured:" + str(context.error))
+    LOGGER.info("Update subscriber - stop")
+
+    # Lift ignore
+    DISPATCHER.bot_data["ignore_callbacks"] = False
+
 def motion_callback(channel):
     if True != DISPATCHER.bot_data["ignore_callbacks"]:
         # Take photo for current timestamp
@@ -113,6 +125,16 @@ def unsub_command(update: Update, context: CallbackContext) -> None:
 
     LOGGER.info("%s unsubscribed from updates", update.message.from_user.username)
 
+def pause_command(update: Update, _: CallbackContext) -> None:
+    update.message.reply_text("Taking a break!")
+
+    DISPATCHER.bot_data["ignore_callbacks"] = True
+
+def unpause_command(update: Update, _: CallbackContext) -> None:
+    update.message.reply_text("Back to work!")
+
+    DISPATCHER.bot_data["ignore_callbacks"] = True
+
 def pic_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Say cheese!")
 
@@ -128,7 +150,7 @@ def pic_command(update: Update, context: CallbackContext) -> None:
 def stat_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Status:\n"
-        "Ignore Callbacks: " + str(context.bot_data["ignore_callbacks"])
+        "Track motion: " + str(context.bot_data["ignore_callbacks"])
     )
 
 def rest_command(update: Update, context: CallbackContext) -> None:
@@ -154,12 +176,14 @@ def die_command(update: Update, context: CallbackContext) -> None:
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text(
         "Available commands:\n"
-        "/sub   - Subcribe to updates\n"
-        "/unsub - Unsubscribe from updates\n"
-        "/pic   - Take a picture\n"
-        "/stat  - Show status\n"
-        "/rest  - Restart"
-        "/die   - Shutdown"
+        "/sub     - Subcribe to updates\n"
+        "/unsub   - Unsubscribe from updates\n"
+        "/pause   - Pause motion tracking\n"
+        "/unpause - Unpause motion tracking\n"
+        "/pic     - Take a picture\n"
+        "/stat    - Show status\n"
+        "/rest    - Restart"
+        "/die     - Shutdown"
     )
 
 if __name__ == "__main__":
@@ -188,11 +212,15 @@ if __name__ == "__main__":
 
     DISPATCHER.add_handler(CommandHandler("sub", sub_command))
     DISPATCHER.add_handler(CommandHandler("unsub", unsub_command))
+    DISPATCHER.add_handler(CommandHandler("pause", pause_command))
+    DISPATCHER.add_handler(CommandHandler("unpause", unpause_command))
     DISPATCHER.add_handler(CommandHandler("pic", pic_command))
     DISPATCHER.add_handler(CommandHandler("die", die_command))
     DISPATCHER.add_handler(CommandHandler("rest", rest_command))
     DISPATCHER.add_handler(CommandHandler("stat", stat_command))
     DISPATCHER.add_handler(CommandHandler("help", help_command))
+
+    DISPATCHER.add_error_handler(error_callback)
 
     DISPATCHER.bot_data["ignore_callbacks"] = False
 
