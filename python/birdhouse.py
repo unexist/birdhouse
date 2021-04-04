@@ -125,6 +125,22 @@ def pic_command(update: Update, context: CallbackContext) -> None:
 
     context.bot.send_photo(chat_id=update.message.from_user.id, photo=open(os.getcwd() + "/pic.jpg", "rb"))
 
+def stat_command(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        "Status:\n"
+        "Ignore Callbacks: " + str(context.bot_data["ignore_callbacks"])
+    )
+
+def rest_command(update: Update, context: CallbackContext) -> None:
+    # Send to subscribers
+    LOGGER.info("Update subscriber - start")
+    for userid, username in context.user_data.items():
+        LOGGER.info("Send message to %s" % username)
+        context.bot.send_message(chat_id=userid, text="Restarting!")
+    LOGGER.info("Update subscriber - stop")
+
+    os.system("sudo reboot")
+
 def die_command(update: Update, context: CallbackContext) -> None:
     # Send to subscribers
     LOGGER.info("Update subscriber - start")
@@ -137,10 +153,12 @@ def die_command(update: Update, context: CallbackContext) -> None:
 
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text(
-        "Available commands:"
-        "/sub   - Subcribe to updates"
-        "/unsub - Unsubscribe from updates"
-        "/pic   - Take a picture"
+        "Available commands:\n"
+        "/sub   - Subcribe to updates\n"
+        "/unsub - Unsubscribe from updates\n"
+        "/pic   - Take a picture\n"
+        "/stat  - Show status\n"
+        "/rest  - Restart"
         "/die   - Shutdown"
     )
 
@@ -172,6 +190,8 @@ if __name__ == "__main__":
     DISPATCHER.add_handler(CommandHandler("unsub", unsub_command))
     DISPATCHER.add_handler(CommandHandler("pic", pic_command))
     DISPATCHER.add_handler(CommandHandler("die", die_command))
+    DISPATCHER.add_handler(CommandHandler("rest", rest_command))
+    DISPATCHER.add_handler(CommandHandler("stat", stat_command))
     DISPATCHER.add_handler(CommandHandler("help", help_command))
 
     DISPATCHER.bot_data["ignore_callbacks"] = False
@@ -179,7 +199,7 @@ if __name__ == "__main__":
     updater.start_polling()
 
     # Say hello to all known users
-    LOGGER.info("Update subscriber - stop")
+    LOGGER.info("Update subscriber - start")
     for userid, username in DISPATCHER.user_data.items():
         DISPATCHER.bot.send_message(chat_id=userid, text="Ready for duty!")
     LOGGER.info("Update subscriber - stop")
