@@ -45,8 +45,8 @@ Nothing special, model can be printed on the back in one go.
 ![Cam](pictures/cam3.jpg?raw=true "Cam")
 ![Cam](pictures/cam4.jpg?raw=true "Cam")
 
-# Clip
+# Animation
 
-And a low-res clip for github:
+And an example animation:
 
-![Clip](pictures/clip.gif?raw=true "Clip")
+![Animation](pictures/anim.gif?raw=true "Animation")
