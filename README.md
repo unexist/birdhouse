@@ -11,10 +11,14 @@ every subscriber.
 
 Following chat commands are available:
 
-- /sub   - Subcribe to updates
-- /unsub - Unsubscribe from updates
-- /pic   - Take a picture
-- /die   - Shutdown
+- /sub     - Subscribe to updates
+- /unsub   - Unsubscribe from updates
+- /pause   - Pause motion tracking
+- /unpause - Unpause motion tracking
+- /pic     - Take a picture
+- /stat    - Show status
+- /rest    - Restart
+- /die     - Shutdown
 
 # Parts list
 

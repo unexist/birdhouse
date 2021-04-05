@@ -192,7 +192,7 @@ def die_command(update: Update, context: CallbackContext) -> None:
 def help_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text(
         "Available commands:\n"
-        "/sub     - Subcribe to updates\n"
+        "/sub     - Subscribe to updates\n"
         "/unsub   - Unsubscribe from updates\n"
         "/pause   - Pause motion tracking\n"
         "/unpause - Unpause motion tracking\n"
