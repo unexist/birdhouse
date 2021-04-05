@@ -13,6 +13,7 @@
 
 from time import sleep, time
 from glob import glob
+from itertools import islice
 import os
 import logging
 
@@ -48,30 +49,38 @@ def alarm_callback(context: CallbackContext) -> None:
     # Convert if more than one
     if 1 < len(imgList):
         LOGGER.info("Convert images - start")
-        os.system("convert -delay 15 -loop 0 image-*.jpg anim.gif")
+        it = iter(imgList)
+        for groupedByTen in iter(lambda: tuple(islice(it, 10)), ()):
+            os.system("convert -delay 15 -loop 0 {:s} ani-{:d}.gif".format(" ".join(groupedByTen), int(time())))
         LOGGER.info("Convert images - stop")
 
+    # Collect images
+    aniList = glob(os.getcwd() + "/ani-*.gif")
+
+    LOGGER.info("Converted %d images to %d anigifs", len(imgList), len(aniList))
+
     # Send to subscribers
-    LOGGER.info("Send file - start")
+    LOGGER.info("Send files - start")
     for userid, username in DISPATCHER.user_data.items():
         LOGGER.info("Send message to %s", username)
-        DISPATCHER.bot.send_message(chat_id=userid, text="Chirp! Chirp!")
 
         # Try to send file(s)
         try:
-            if os.path.isfile("anim.gif"):
-                DISPATCHER.bot.send_animation(chat_id=userid, animation=open("anim.gif", "rb"))
-            else:
+            if 0 < len(aniList):
+                for ani in aniList:
+                    DISPATCHER.bot.send_animation(chat_id=userid, animation=open(ani, "rb"), caption="Chirp! Chirp!")
+            elif 0 < len(imgList):
                 for img in imgList:
-                    DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"))
+                    DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"), caption="Chirp! Chirp!")
         except Exception as err:
             context.bot.send_message(chat_id=userid, text="Error occurred:" + str(err))
-    LOGGER.info("Send file - stop")
+    LOGGER.info("Send files - stop")
 
     # Tidy up
     LOGGER.info("Tidy up - start")
-    if os.path.isfile("anim.gif"):
-        os.remove("anim.gif")
+    for ani in aniList:
+        if os.path.isfile(ani):
+            os.remove(ani)
 
     for img in imgList:
         if os.path.isfile(img):
