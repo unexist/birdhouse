@@ -29,7 +29,10 @@ CAMERA = None
 DISPATCHER = None
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    filename="birdhouse.log",
+    filemode="a",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
 )
 
 LOGGER = logging.getLogger(__name__)
