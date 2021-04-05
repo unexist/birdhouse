@@ -57,12 +57,15 @@ def alarm_callback(context: CallbackContext) -> None:
         LOGGER.info("Send message to %s", username)
         DISPATCHER.bot.send_message(chat_id=userid, text="Chirp! Chirp!")
 
-        # Select file
-        if os.path.isfile("anim.gif"):
-            DISPATCHER.bot.send_animation(chat_id=userid, animation=open("anim.gif", "rb"))
-        else:
-            for img in imgList:
-                DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"))
+        # Try to send file(s)
+        try:
+            if os.path.isfile("anim.gif"):
+                DISPATCHER.bot.send_animation(chat_id=userid, animation=open("anim.gif", "rb"))
+            else:
+                for img in imgList:
+                    DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"))
+        except Exception as err:
+            context.bot.send_message(chat_id=userid, text="Error occurred:" + str(err))
     LOGGER.info("Send file - stop")
 
     # Tidy up
@@ -79,13 +82,13 @@ def alarm_callback(context: CallbackContext) -> None:
     DISPATCHER.bot_data["ignore_callbacks"] = False
 
 def error_callback(update: object, context: CallbackContext) -> None:
-    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
-
     LOGGER.info("Update subscriber - start")
     for userid, username in context.user_data.items():
         LOGGER.info("Send message to %s" % username)
-        context.bot.send_message(chat_id=userid, text="Error occured:" + str(context.error))
+        context.bot.send_message(chat_id=userid, text="Error occurred:" + str(context.error))
     LOGGER.info("Update subscriber - stop")
+
+    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
 
     # Lift ignore
     DISPATCHER.bot_data["ignore_callbacks"] = False
@@ -133,7 +136,7 @@ def pause_command(update: Update, _: CallbackContext) -> None:
 def unpause_command(update: Update, _: CallbackContext) -> None:
     update.message.reply_text("Back to work!")
 
-    DISPATCHER.bot_data["ignore_callbacks"] = True
+    DISPATCHER.bot_data["ignore_callbacks"] = False
 
 def pic_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text("Say cheese!")
@@ -150,7 +153,8 @@ def pic_command(update: Update, context: CallbackContext) -> None:
 def stat_command(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Status:\n"
-        "Track motion: " + str(context.bot_data["ignore_callbacks"])
+        "Ignore callbacks: " + str(context.bot_data["ignore_callbacks"]) + "\n"
+        "Subscribers: " + str(len(context.user_data))
     )
 
 def rest_command(update: Update, context: CallbackContext) -> None:
