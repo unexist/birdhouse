@@ -29,7 +29,7 @@ CAMERA = None
 DISPATCHER = None
 
 logging.basicConfig(
-    filename="birdhouse.log",
+filename="skull.log",
     filemode="a",
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -71,10 +71,10 @@ def alarm_callback(context: CallbackContext) -> None:
         try:
             if 0 < len(aniList):
                 for ani in aniList:
-                    DISPATCHER.bot.send_animation(chat_id=userid, animation=open(ani, "rb"), caption="Chirp! Chirp!")
+                    DISPATCHER.bot.send_animation(chat_id=userid, animation=open(ani, "rb"), caption="Boo! Boo!")
             elif 0 < len(imgList):
                 for img in imgList:
-                    DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"), caption="Chirp! Chirp!")
+                    DISPATCHER.bot.send_photo(chat_id=userid, photo=open(img, "rb"), caption="Boo! Boo!")
         except Exception as err:
             context.bot.send_message(chat_id=userid, text="Error occurred:" + str(err))
     LOGGER.info("Send files - stop")
